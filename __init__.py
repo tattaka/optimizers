@@ -15,7 +15,7 @@ from .Ranger import *
 def get_optimizer(optimizer: str = 'Adam',
                   lookahead: bool = False,
                   model=None,
-                  separate_decoder: bool = True,
+                  separate_head: bool = True,
                   lr: float = 1e-3,
                   lr_e: float = 1e-3):
     """
@@ -23,15 +23,15 @@ def get_optimizer(optimizer: str = 'Adam',
     :param optimizer:
     :param lookahead:
     :param model:
-    :param separate_decoder:
+    :param separate_head:
     :param lr:
     :param lr_e:
     :return:
     """
 
-    if separate_decoder:
+    if separate_head:
         params = [
-                    {'params': model.cls_head.parameters(), 'lr': lr
+                    {'params': model.head.parameters(), 'lr': lr
                      },
                     {'params': model.encoder.parameters(), 'lr': lr_e},
                 ]
