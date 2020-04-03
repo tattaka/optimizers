@@ -1,17 +1,17 @@
 
 import math
+
 import torch
 from torch.optim.optimizer import Optimizer
-import numpy as np
-import torch.nn as nn
-#import torch.optim as Optimizer
+
+# import torch.optim as Optimizer
 
 # Original source:  https://github.com/shivram1987/diffGrad/blob/master/diffGrad.py
 
 # modifications: @lessw2020
 
 
-class DiffGrad(Optimizer):
+class diffGrad(Optimizer):
     r"""Implements diffGrad algorithm. It is modified from the pytorch implementation of Adam.
     It has been proposed in `diffGrad: An Optimization Method for Convolutional Neural Networks`_.
     Arguments:
@@ -40,16 +40,17 @@ class DiffGrad(Optimizer):
         if not 0.0 <= eps:
             raise ValueError("Invalid epsilon value: {}".format(eps))
         if not 0.0 <= betas[0] < 1.0:
-            raise ValueError("Invalid beta parameter at index 0: {}".format(betas[0]))
+            raise ValueError(
+                "Invalid beta parameter at index 0: {}".format(betas[0]))
         if not 0.0 <= betas[1] < 1.0:
-            raise ValueError("Invalid beta parameter at index 1: {}".format(betas[1]))
-        
-        
+            raise ValueError(
+                "Invalid beta parameter at index 1: {}".format(betas[1]))
+
         defaults = dict(lr=lr, betas=betas, eps=eps, weight_decay=weight_decay)
-        
+
         super().__init__(params, defaults)
-        
-        #save version
+
+        # save version
         self.version = version
 
     def __setstate__(self, state):
@@ -71,7 +72,8 @@ class DiffGrad(Optimizer):
                     continue
                 grad = p.grad.data
                 if grad.is_sparse:
-                    raise RuntimeError('diffGrad does not support sparse gradients, please consider SparseAdam instead')
+                    raise RuntimeError(
+                        'diffGrad does not support sparse gradients, please consider SparseAdam instead')
 
                 state = self.state[p]
 
@@ -102,26 +104,27 @@ class DiffGrad(Optimizer):
                 bias_correction2 = 1 - beta2 ** state['step']
 
                 # compute diffgrad coefficient (dfc)
-                
-                
-                if self.version==0:
+
+                if self.version == 0:
                     diff = abs(previous_grad - grad)
-                elif self.version ==1:
-                    diff = previous_grad-grad
-                elif self.version ==2:
-                    diff =  .5*abs(previous_grad - grad)
-                    
-                if self.version==0 or self.version==1:    
+                elif self.version == 1:
+                    diff = previous_grad - grad
+                elif self.version == 2:
+                    diff = .5 * abs(previous_grad - grad)
+
+                if self.version == 0 or self.version == 1:
                     dfc = 1. / (1. + torch.exp(-diff))
-                elif self.version==2:
-                    dfc = 9. / (1. + torch.exp(-diff))-4      #DFC2 = 9/(1+e-(.5/g/)-4 #range .5,5
-                    
+                elif self.version == 2:
+                    # DFC2 = 9/(1+e-(.5/g/)-4 #range .5,5
+                    dfc = 9. / (1. + torch.exp(-diff)) - 4
+
                 state['previous_grad'] = grad
 
                 # update momentum with dfc
                 exp_avg1 = exp_avg * dfc
 
-                step_size = group['lr'] * math.sqrt(bias_correction2) / bias_correction1
+                step_size = group['lr'] * \
+                    math.sqrt(bias_correction2) / bias_correction1
 
                 p.data.addcdiv_(-step_size, exp_avg1, denom)
 

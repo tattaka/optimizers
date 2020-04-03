@@ -1,9 +1,11 @@
 import math
+
 import torch
 from torch.optim import Optimizer
 
-#source - https://github.com/lancopku/AdaMod/blob/master/adamod/adamod.py
-#modification - lessw2020 - use len_memory as integer lookback, convert to beta3 for easier usage
+# source - https://github.com/lancopku/AdaMod/blob/master/adamod/adamod.py
+# modification - lessw2020 - use len_memory as integer lookback, convert to beta3 for easier usage
+
 
 class AdaMod(Optimizer):
     """Implements AdaMod algorithm with Decoupled Weight Decay (arxiv.org/abs/1711.05101)
@@ -20,20 +22,23 @@ class AdaMod(Optimizer):
         weight_decay (float, optional): weight decay (L2 penalty) (default: 0)
     """
 
-    def __init__(self, params, lr=1e-3, betas=(0.9, 0.999), 
-                 len_memory=1000, #will convert to beta3
+    def __init__(self, params, lr=1e-3, betas=(0.9, 0.999),
+                 len_memory=1000,  # will convert to beta3
                  eps=1e-8, weight_decay=0):
         if not 0.0 <= lr:
             raise ValueError("Invalid learning rate: {}".format(lr))
         if not 0.0 <= eps:
             raise ValueError("Invalid epsilon value: {}".format(eps))
         if not 0.0 <= betas[0] < 1.0:
-            raise ValueError("Invalid beta parameter at index 0: {}".format(betas[0]))
+            raise ValueError(
+                "Invalid beta parameter at index 0: {}".format(betas[0]))
         if not 0.0 <= betas[1] < 1.0:
-            raise ValueError("Invalid beta parameter at index 1: {}".format(betas[1]))
-            
-        beta3 = 1 - (1/len_memory)
-        print(f"AdaMod optimizer: len_memory of {len_memory} set at Beta3 of {beta3}")
+            raise ValueError(
+                "Invalid beta parameter at index 1: {}".format(betas[1]))
+
+        beta3 = 1 - (1 / len_memory)
+        print(
+            f"AdaMod optimizer: len_memory of {len_memory} set at Beta3 of {beta3}")
         if not 0.0 <= beta3 < 1.0:
             raise ValueError("Invalid beta3 parameter: {}".format(beta3))
         defaults = dict(lr=lr, betas=betas, beta3=beta3, eps=eps,
@@ -87,7 +92,8 @@ class AdaMod(Optimizer):
 
                 bias_correction1 = 1 - beta1 ** state['step']
                 bias_correction2 = 1 - beta2 ** state['step']
-                step_size = group['lr'] * math.sqrt(bias_correction2) / bias_correction1
+                step_size = group['lr'] * \
+                    math.sqrt(bias_correction2) / bias_correction1
 
                 if group['weight_decay'] != 0:
                     p.data.add_(-group['weight_decay'] * group['lr'], p.data)
@@ -95,8 +101,9 @@ class AdaMod(Optimizer):
                 # Applies momental bounds on actual learning rates
                 step_size = torch.full_like(denom, step_size)
                 step_size.div_(denom)
-                exp_avg_lr.mul_(group['beta3']).add_(1 - group['beta3'], step_size)
-                step_size = torch.min(step_size,  exp_avg_lr)
+                exp_avg_lr.mul_(group['beta3']).add_(
+                    1 - group['beta3'], step_size)
+                step_size = torch.min(step_size, exp_avg_lr)
                 step_size.mul_(exp_avg)
 
                 p.data.add_(-step_size)

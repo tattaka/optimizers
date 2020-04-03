@@ -1,9 +1,8 @@
-import torch
-import math
 import itertools as it
-import torch.optim as optim
 import warnings
-warnings.filterwarnings("once")
+
+import torch.optim as optim
+from torch.optim.optimizer import Optimizer
 
 from .AdaMod import *
 from .DeepMemory import *
@@ -11,6 +10,9 @@ from .diffGrad import *
 from .diffMod import *
 from .RAdam import *
 from .Ranger import *
+
+warnings.filterwarnings("once")
+
 
 def get_optimizer(optimizer: str = 'Adam',
                   lookahead: bool = False,
@@ -31,10 +33,10 @@ def get_optimizer(optimizer: str = 'Adam',
 
     if separate_head:
         params = [
-                    {'params': model.head.parameters(), 'lr': lr
-                     },
-                    {'params': model.encoder.parameters(), 'lr': lr_e},
-                ]
+            {'params': model.head.parameters(), 'lr': lr
+             },
+            {'params': model.encoder.parameters(), 'lr': lr_e},
+        ]
     else:
         params = [{'params': model.parameters(), 'lr': lr}]
 
@@ -50,8 +52,8 @@ def get_optimizer(optimizer: str = 'Adam',
         optimizer = Ranger(params, lr=lr)
     elif optimizer == "DeepMemory":
         optimizer = DeepMemory(params, lr=lr)
-#     elif optimizer == 'diffGrad':
-#         optimizer = diffGrad(params, lr=lr)
+    elif optimizer == 'diffGrad':
+        optimizer = diffGrad(params, lr=lr)
     elif optimizer == 'diffRGrad':
         optimizer = diffRGrad(params, lr=lr)
     else:
@@ -62,8 +64,9 @@ def get_optimizer(optimizer: str = 'Adam',
 
     return optimizer
 
+
 class Lookahead(Optimizer):
-    def __init__(self, base_optimizer,alpha=0.5, k=6):
+    def __init__(self, base_optimizer, alpha=0.5, k=6):
         if not 0.0 <= alpha <= 1.0:
             raise ValueError(f'Invalid slow update rate: {alpha}')
         if not 1 <= k:
@@ -75,7 +78,7 @@ class Lookahead(Optimizer):
         for group in self.param_groups:
             group["step_counter"] = 0
         self.slow_weights = [[p.clone().detach() for p in group['params']]
-                                for group in self.param_groups]
+                             for group in self.param_groups]
 
         for w in it.chain(*self.slow_weights):
             w.requires_grad = False
@@ -85,13 +88,13 @@ class Lookahead(Optimizer):
         if closure is not None:
             loss = closure()
         loss = self.optimizer.step()
-        for group,slow_weights in zip(self.param_groups,self.slow_weights):
+        for group, slow_weights in zip(self.param_groups, self.slow_weights):
             group['step_counter'] += 1
             if group['step_counter'] % self.k != 0:
                 continue
-            for p,q in zip(group['params'],slow_weights):
+            for p, q in zip(group['params'], slow_weights):
                 if p.grad is None:
                     continue
-                q.data.add_(self.alpha,p.data - q.data)
+                q.data.add_(self.alpha, p.data - q.data)
                 p.data.copy_(q.data)
         return loss

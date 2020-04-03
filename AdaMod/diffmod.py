@@ -1,4 +1,5 @@
 import math
+
 import torch
 from torch.optim import Optimizer
 
@@ -31,21 +32,23 @@ class DiffMod(Optimizer):
         if not 0.0 <= eps:
             raise ValueError("Invalid epsilon value: {}".format(eps))
         if not 0.0 <= betas[0] < 1.0:
-            raise ValueError("Invalid beta parameter at index 0: {}".format(betas[0]))
+            raise ValueError(
+                "Invalid beta parameter at index 0: {}".format(betas[0]))
         if not 0.0 <= betas[1] < 1.0:
-            raise ValueError("Invalid beta parameter at index 1: {}".format(betas[1]))
-        
-        #compute b3
-        beta3 = 1-(1/len_memory)
-        print(f"length of memory is ",len_memory," and b3 is thus ",beta3)
-        
+            raise ValueError(
+                "Invalid beta parameter at index 1: {}".format(betas[1]))
+
+        # compute b3
+        beta3 = 1 - (1 / len_memory)
+        print(f"length of memory is ", len_memory, " and b3 is thus ", beta3)
+
         if not 0.0 <= beta3 < 1.0:
             raise ValueError("Invalid beta3 parameter: {}".format(beta3))
-        
+
         defaults = dict(lr=lr, betas=betas, beta3=beta3, eps=eps,
                         weight_decay=weight_decay)
         super().__init__(params, defaults)
-        
+
         self.version = version
 
     def __setstate__(self, state):
@@ -82,8 +85,7 @@ class DiffMod(Optimizer):
                     # Exponential moving average of actual learning rates
                     state['exp_avg_lr'] = torch.zeros_like(p.data)
                     # Previous gradient
-                    state['previous_grad'] = torch.zeros_like(p.data)                    
-                    
+                    state['previous_grad'] = torch.zeros_like(p.data)
 
                 exp_avg, exp_avg_sq, exp_avg_lr = state['exp_avg'], state['exp_avg_sq'], state['exp_avg_lr']
                 previous_grad = state['previous_grad']
@@ -99,24 +101,25 @@ class DiffMod(Optimizer):
 
                 bias_correction1 = 1 - beta1 ** state['step']
                 bias_correction2 = 1 - beta2 ** state['step']
-                step_size = group['lr'] * math.sqrt(bias_correction2) / bias_correction1
-                
+                step_size = group['lr'] * \
+                    math.sqrt(bias_correction2) / bias_correction1
+
                 # compute diffgrad coefficient (dfc)
-                
-                
-                if self.version==0:
+
+                if self.version == 0:
                     diff = abs(previous_grad - grad)
-                elif self.version ==1:
-                    diff = previous_grad-grad
-                elif self.version ==2:
-                    diff =  .5*abs(previous_grad - grad)
-                    
-                if self.version==0 or self.version==1:    
+                elif self.version == 1:
+                    diff = previous_grad - grad
+                elif self.version == 2:
+                    diff = .5 * abs(previous_grad - grad)
+
+                if self.version == 0 or self.version == 1:
                     dfc = 1. / (1. + torch.exp(-diff))
-                elif self.version==2:
-                    dfc = 9. / (1. + torch.exp(-diff))-4      #DFC2 = 9/(1+e-(.5/g/)-4 #range .5,5
-                    
-                state['previous_grad'] = grad                
+                elif self.version == 2:
+                    # DFC2 = 9/(1+e-(.5/g/)-4 #range .5,5
+                    dfc = 9. / (1. + torch.exp(-diff)) - 4
+
+                state['previous_grad'] = grad
 
                 if group['weight_decay'] != 0:
                     p.data.add_(-group['weight_decay'] * group['lr'], p.data)
@@ -124,12 +127,13 @@ class DiffMod(Optimizer):
                 # Applies momental bounds on actual learning rates
                 step_size = torch.full_like(denom, step_size)
                 step_size.div_(denom)
-                exp_avg_lr.mul_(group['beta3']).add_(1 - group['beta3'], step_size)
-                step_size = torch.min(step_size,  exp_avg_lr)
-                
+                exp_avg_lr.mul_(group['beta3']).add_(
+                    1 - group['beta3'], step_size)
+                step_size = torch.min(step_size, exp_avg_lr)
+
                 # update momentum with dfc
                 exp_avg1 = exp_avg * dfc
-                
+
                 step_size.mul_(exp_avg1)
 
                 p.data.add_(-step_size)
