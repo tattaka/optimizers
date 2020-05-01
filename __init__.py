@@ -33,10 +33,10 @@ def get_optimizer(optimizer: str = 'Adam',
 
     if separate_head:
         params = [
-            {'params': model.head.parameters(), 'lr': lr
-             },
             {'params': model.encoder.parameters(), 'lr': lr_e},
         ]
+        for key in model.heads:
+            params.append({'params': model.heads[key].parameters(), 'lr': lr})
     else:
         params = [{'params': model.parameters(), 'lr': lr}]
 
