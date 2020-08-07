@@ -33,7 +33,7 @@ def get_optimizer(optimizer: str = 'Adam',
 
     if separate_head:
         params = [
-            {'params': model.encoder.parameters(), 'lr': lr_e},
+            {'params': model.backbone.parameters(), 'lr': lr_e},
         ]
         for key in model.heads:
             params.append({'params': model.heads[key].parameters(), 'lr': lr})
