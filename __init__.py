@@ -35,8 +35,8 @@ def get_optimizer(optimizer: str = 'Adam',
         params = [
             {'params': model.backbone.parameters(), 'lr': lr_e},
         ]
-        for key in model.heads:
-            params.append({'params': model.heads[key].parameters(), 'lr': lr})
+        # for key in model.heads:
+        params.append({'params': model.heads.parameters(), 'lr': lr})
     else:
         params = [{'params': model.parameters(), 'lr': lr}]
 
