@@ -42,7 +42,7 @@ def get_optimizer(optimizer: str = 'Adam',
 
     if optimizer == 'Adam':
         optimizer = optim.Adam(params, lr=lr)
-    if optimizer == 'SGD':
+    elif optimizer == 'SGD':
         optimizer = optim.SGD(params, lr=lr)
     elif optimizer == 'RAdam':
         optimizer = RAdam(params, lr=lr)
