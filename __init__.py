@@ -19,7 +19,8 @@ def get_optimizer(optimizer: str = 'Adam',
                   model=None,
                   separate_head: bool = True,
                   lr: float = 1e-3,
-                  lr_e: float = 1e-3):
+                  lr_e: float = 1e-3,
+                  **kwargs):
     """
     # https://github.com/lonePatient/lookahead_pytorch/blob/master/run.py
     :param optimizer:
@@ -41,21 +42,21 @@ def get_optimizer(optimizer: str = 'Adam',
         params = [{'params': model.parameters(), 'lr': lr}]
 
     if optimizer == 'Adam':
-        optimizer = optim.Adam(params, lr=lr)
+        optimizer = optim.Adam(params, lr=lr, **kwargs)
     elif optimizer == 'SGD':
-        optimizer = optim.SGD(params, lr=lr)
+        optimizer = optim.SGD(params, lr=lr, **kwargs)
     elif optimizer == 'RAdam':
-        optimizer = RAdam(params, lr=lr)
+        optimizer = RAdam(params, lr=lr, **kwargs)
     elif optimizer == 'Ralamb':
-        optimizer = Ralamb(params, lr=lr)
+        optimizer = Ralamb(params, lr=lr, **kwargs)
     elif optimizer == "Ranger":
-        optimizer = Ranger(params, lr=lr)
+        optimizer = Ranger(params, lr=lr, **kwargs)
     elif optimizer == "DeepMemory":
-        optimizer = DeepMemory(params, lr=lr)
+        optimizer = DeepMemory(params, lr=lr, **kwargs)
     elif optimizer == 'diffGrad':
-        optimizer = diffGrad(params, lr=lr)
+        optimizer = diffGrad(params, lr=lr, **kwargs)
     elif optimizer == 'diffRGrad':
-        optimizer = diffRGrad(params, lr=lr)
+        optimizer = diffRGrad(params, lr=lr, **kwargs)
     else:
         raise ValueError('unknown base optimizer type')
 
